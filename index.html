@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>おんこちしんルーレット</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #DCE3D6;
+  --paper: #FBFAF4;
+  --ink: #1E2A26;
+  --ink-soft: #5E6B64;
+  --line: #B9C4B4;
+  --shu: #C33A1F;
+  --match: #3F7A5A;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #18201C;
+    --paper: #242E29;
+    --ink: #ECEFE6;
+    --ink-soft: #A3AFA7;
+    --line: #3A4740;
+    --shu: #E0573A;
+    --match: #7CC19A;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #18201C;
+  --paper: #242E29;
+  --ink: #ECEFE6;
+  --ink-soft: #A3AFA7;
+  --line: #3A4740;
+  --shu: #E0573A;
+  --match: #7CC19A;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  line-height: 1.7;
+}
+main {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 20px 64px;
+}
+h1 {
+  font-family: "Yuji Syuku", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+.lead {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+.stage {
+  position: relative;
+  margin-top: 40px;
+}
+.reels {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(6px, 1.6vw, 12px);
+}
+.reel {
+  --h: clamp(56px, 13vw, 92px);
+  position: relative;
+  height: calc(var(--h) * 1.7);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.reel::before, .reel::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 30%;
+  z-index: 2;
+  pointer-events: none;
+}
+.reel::before { top: 0; background: linear-gradient(var(--paper), transparent); }
+.reel::after { bottom: 0; background: linear-gradient(transparent, var(--paper)); }
+.strip {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  will-change: transform;
+}
+.strip span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--h);
+  font-family: "Yuji Syuku", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: calc(var(--h) * 0.62);
+  line-height: 1;
+}
+.reel.reach { border-color: var(--shu); }
+
+.marks {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(6px, 1.6vw, 12px);
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  min-height: 1.7em;
+}
+.marks .hit { color: var(--match); font-weight: 700; }
+
+.reach-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -30px;
+  font-weight: 700;
+  color: var(--shu);
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.reach-label.on { opacity: 1; }
+
+.stamp {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 50%;
+  width: clamp(120px, 30vw, 180px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: center;
+  padding: 10px;
+  border: 5px solid var(--shu);
+  border-radius: 8px;
+  color: var(--shu);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  font-family: "Yuji Syuku", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1;
+  transform: translate(-50%, -50%) rotate(-8deg) scale(2.4);
+  opacity: 0;
+  pointer-events: none;
+  writing-mode: vertical-rl;
+}
+.stamp.on {
+  animation: stamp .45s cubic-bezier(.2, 1.6, .4, 1) forwards;
+}
+@keyframes stamp {
+  to { transform: translate(-50%, -50%) rotate(-8deg) scale(1); opacity: 1; }
+}
+
+.controls {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: center;
+}
+button.spin {
+  appearance: none;
+  border: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 14px 44px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .08s;
+}
+button.spin:active { transform: scale(.97); }
+button.spin:disabled { opacity: .45; cursor: default; }
+button.spin:focus-visible { outline: 3px solid var(--shu); outline-offset: 3px; }
+.stats { color: var(--ink-soft); font-size: 0.9rem; }
+
+.result {
+  margin-top: 28px;
+  font-size: 1rem;
+  min-height: 1.7em;
+}
+.result strong {
+  font-family: "Yuji Syuku", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: .08em;
+  margin-left: 6px;
+}
+.result.win { color: var(--shu); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp.on { animation: none; transform: translate(-50%, -50%) rotate(-8deg); opacity: 1; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>おんこちしんルーレット</h1>
+  <p class="lead">6文字がそろえば、温故知新。</p>
+
+  <div class="stage">
+    <div class="reach-label" id="reachLabel">リーチ</div>
+    <div class="reels" id="reels"></div>
+    <div class="marks" id="marks"></div>
+    <div class="stamp" id="stamp" aria-hidden="true"><span>温故</span><span>知新</span></div>
+  </div>
+
+  <div class="controls">
+    <button class="spin" id="spinBtn" type="button">回す</button>
+    <div class="stats"><span id="count">0</span>回目　そろう確率は15,625分の1</div>
+  </div>
+
+  <p class="result" id="result" aria-live="polite"></p>
+
+</main>
+
+<script>
+(function () {
+  const LETTERS = ["お", "ん", "こ", "ち", "し"];
+  const N = LETTERS.length;
+  const TARGET = ["お", "ん", "こ", "ち", "し", "ん"];
+  const REPEAT = 4;
+  const SPEED = 0.02; // 文字/ms
+
+  const reelsEl = document.getElementById("reels");
+  const marksEl = document.getElementById("marks");
+  const btn = document.getElementById("spinBtn");
+  const resultEl = document.getElementById("result");
+  const countEl = document.getElementById("count");
+  const stampEl = document.getElementById("stamp");
+  const reachEl = document.getElementById("reachLabel");
+
+  const reels = [];
+  for (let i = 0; i < 6; i++) {
+    const reel = document.createElement("div");
+    reel.className = "reel";
+    const strip = document.createElement("div");
+    strip.className = "strip";
+    for (let r = 0; r < REPEAT; r++) {
+      LETTERS.forEach(l => {
+        const s = document.createElement("span");
+        s.textContent = l;
+        strip.appendChild(s);
+      });
+    }
+    reel.appendChild(strip);
+    reelsEl.appendChild(reel);
+
+    const mark = document.createElement("span");
+    marksEl.appendChild(mark);
+
+    const start = LETTERS.indexOf(TARGET[i]);
+    reels.push({ el: reel, strip, mark, offset: start, state: "idle", stop: null, result: TARGET[i] });
+  }
+
+  function render(r) {
+    const h = r.strip.firstChild.getBoundingClientRect().height;
+    const winH = r.el.clientHeight;
+    const o = ((r.offset % N) + N) % N;
+    const y = -(N + o) * h + (winH - h) / 2;
+    r.strip.style.transform = "translateY(" + y + "px)";
+  }
+  reels.forEach(render);
+  window.addEventListener("resize", () => reels.forEach(render));
+
+  let count = 0;
+  let running = false;
+
+  function beginStop(r, now, duration) {
+    const pick = Math.floor(Math.random() * N);
+    const o0 = r.offset;
+    const minDist = SPEED * duration / 3;
+    let T = Math.ceil(o0 + minDist);
+    while (((T % N) + N) % N !== pick) T++;
+    const dist = T - o0;
+    r.stop = { o0, T, t0: now, d: 3 * dist / SPEED };
+    r.result = LETTERS[pick];
+    r.state = "stopping";
+  }
+
+  function markReel(i) {
+    const r = reels[i];
+    if (r.result === TARGET[i]) {
+      r.mark.textContent = "一致";
+      r.mark.className = "hit";
+    } else {
+      r.mark.textContent = "";
+      r.mark.className = "";
+    }
+  }
+
+  function spin() {
+    if (running) return;
+    running = true;
+    btn.disabled = true;
+    btn.textContent = "回転中";
+    resultEl.textContent = "";
+    resultEl.className = "result";
+    stampEl.classList.remove("on");
+    reachEl.classList.remove("on");
+
+    reels.forEach(r => {
+      r.state = "spinning";
+      r.mark.textContent = "";
+      r.mark.className = "";
+      r.el.classList.remove("reach");
+    });
+
+    const t0 = performance.now();
+    let last = t0;
+    let nextStop = 0;
+    let nextStopAt = t0 + 1100;
+
+    function frame(now) {
+      const dt = now - last;
+      last = now;
+
+      if (nextStop < 6 && now >= nextStopAt) {
+        const i = nextStop;
+        const isLast = i === 5;
+        const reach = isLast && reels.slice(0, 5).every((r, k) => r.result === TARGET[k]);
+        beginStop(reels[i], now, reach ? 2400 : 650);
+        nextStop++;
+        if (nextStop < 6) {
+          let gap = 520;
+          if (nextStop === 5) {
+            const allHit = reels.slice(0, 5).every((r, k) => r.state !== "spinning" && r.result === TARGET[k]);
+            gap = 520;
+            if (allHit) gap = 900;
+          }
+          nextStopAt = now + gap;
+        }
+      }
+
+      reels.forEach((r, i) => {
+        if (r.state === "spinning") {
+          r.offset += SPEED * dt;
+        } else if (r.state === "stopping") {
+          const s = r.stop;
+          const t = Math.min(1, (now - s.t0) / s.d);
+          const e = 1 - Math.pow(1 - t, 3);
+          r.offset = s.o0 + (s.T - s.o0) * e;
+          if (t >= 1) {
+            r.offset = s.T;
+            r.state = "idle";
+            markReel(i);
+            if (i === 4 && reels.slice(0, 5).every((x, k) => x.result === TARGET[k])) {
+              reachEl.classList.add("on");
+              reels[5].el.classList.add("reach");
+            }
+          }
+        }
+        render(r);
+      });
+
+      if (reels.every(r => r.state === "idle") && nextStop >= 6) {
+        finish();
+      } else {
+        requestAnimationFrame(frame);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function finish() {
+    running = false;
+    count++;
+    countEl.textContent = count;
+    const word = reels.map(r => r.result).join("");
+    const win = word === TARGET.join("");
+    reachEl.classList.remove("on");
+    reels[5].el.classList.remove("reach");
+
+    resultEl.innerHTML = "";
+    resultEl.appendChild(document.createTextNode(win ? "そろいました" : "結果"));
+    const s = document.createElement("strong");
+    s.textContent = word;
+    resultEl.appendChild(s);
+    if (win) {
+      resultEl.classList.add("win");
+      stampEl.classList.add("on");
+    }
+
+
+    btn.disabled = false;
+    btn.textContent = "もう一度回す";
+    btn.focus();
+  }
+
+  btn.addEventListener("click", spin);
+})();
+</script>
+</body>
+</html>
